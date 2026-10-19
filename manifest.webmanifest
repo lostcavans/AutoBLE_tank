@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "Autito BLE ESP32-S3",
-  "short_name": "Autito BLE",
-  "description": "Control remoto de motores por Bluetooth LE con ESP32-S3",
+  "name": "AutoBLE - Carrito ESP32-S3 y Tanque ESP32",
+  "short_name": "AutoBLE",
+  "description": "App Android BLE para controlar un carro ESP32-S3 y un tanque ESP32 clasico con L298N",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
@@ -10,7 +10,17 @@
   "theme_color": "#0a1225",
   "lang": "es",
   "icons": [
-    {"src":"./icon-192.png", "sizes":"192x192", "type":"image/png", "purpose":"any maskable"},
-    {"src":"./icon-512.png", "sizes":"512x512", "type":"image/png", "purpose":"any maskable"}
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
   ]
 }

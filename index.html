@@ -4,11 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
   <meta name="theme-color" content="#0a1225" />
-  <meta name="description" content="Mando Bluetooth BLE para un carrito con ESP32-S3 y puente H L298N" />
+  <meta name="description" content="Control Bluetooth BLE para el carrito ESP32-S3 y el tanque ESP32 clasico con puente H L298N" />
   <meta name="mobile-web-app-capable" content="yes" />
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" href="./icon-192.png" />
-  <title>Autito BLE · ESP32-S3</title>
+  <title>AutoBLE · Carrito y Tanque</title>
   <style>
     :root {color-scheme: dark; --bg:#080e1e; --panel:#111b31; --panel2:#18263f; --stroke:#30415d; --muted:#99a9c2; --white:#f3f7ff; --blue:#56b5ff; --blue2:#2279e8; --green:#56e5ad; --red:#ff6f85; --shadow:0 18px 50px #0007}
     *{box-sizing:border-box} html,body{min-height:100%;margin:0} body{background:radial-gradient(circle at 15% 0%,#172d56 0%,transparent 35%),var(--bg);color:var(--white);font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-tap-highlight-color:transparent} button,input{font:inherit} button{cursor:pointer} button:focus-visible,input:focus-visible{outline:3px solid #79caff;outline-offset:3px}
@@ -27,14 +27,14 @@
 </head>
 <body>
 <main class="shell">
-  <header class="top"><div class="logo"><div class="logo-mark" aria-hidden="true">🚙</div><div><h1>Autito BLE</h1><p>Control remoto · ESP32-S3</p></div></div><div class="tag">L298N + BLE</div></header>
+  <header class="top"><div class="logo"><div class="logo-mark" aria-hidden="true">🚙</div><div><h1>AutoBLE</h1><p>Carrito ESP32-S3 y tanque ESP32</p></div></div><div class="tag">L298N + BLE</div></header>
 
   <section class="card" aria-label="Conexión Bluetooth">
-    <div class="connection"><span class="indicator" id="led"></span><div class="info"><strong id="connection-text">Sin conectar</strong><small id="device-text">Enciende el carro y activa Bluetooth</small></div><button type="button" class="connect-btn" id="connect-button">Conectar</button></div>
+    <div class="connection"><span class="indicator" id="led"></span><div class="info"><strong id="connection-text">Sin conectar</strong><small id="device-text">Enciende el vehículo y activa Bluetooth</small></div><button type="button" class="connect-btn" id="connect-button">Conectar</button></div>
   </section>
 
   <section class="card" aria-label="Control de dirección">
-    <div class="control-head"><div><span class="eyebrow">CONTROLES</span><h2 class="control-title">Conduce tu carrito</h2></div><span class="mode" id="drive-mode">Detenido</span></div>
+    <div class="control-head"><div><span class="eyebrow">CONTROLES</span><h2 class="control-title">Conduce tu vehículo</h2></div><span class="mode" id="drive-mode">Detenido</span></div>
     <p class="control-desc">Mantén presionada una flecha para moverte. Suéltala para detenerte.</p>
     <div class="pad" id="dpad">
       <button type="button" class="drive up" data-command="F" aria-label="Avanzar"><span class="arrow">↑</span><span class="label">AVANZAR</span></button>
@@ -53,12 +53,12 @@
     <div class="statusdetail" id="details" role="status" aria-live="polite"></div>
   </section>
 
-  <div class="note"><span aria-hidden="true">⚠</span><span>Prueba primero con las ruedas levantadas del suelo. Si el control se desconecta, el carro se detiene automáticamente.</span></div>
-  <div class="footer">Sin Wi-Fi para conducir · <strong>Bluetooth Low Energy</strong><br/>Para Android Chrome, desde una página segura (HTTPS).</div>
+  <div class="note"><span aria-hidden="true">⚠</span><span>Prueba primero con las ruedas levantadas del suelo. Si el control se desconecta, los motores se detienen automáticamente.</span></div>
+  <div class="footer">Para cambiar de vehículo: Desconectar → Conectar.<br/>Controla uno a la vez · <strong>Bluetooth Low Energy</strong><br/>Para Android Chrome, desde una página segura (HTTPS).</div>
 </main>
 <script>
 'use strict';
-const DEVICE_NAME = 'AUTO_ESP32_S3';
+const DEVICE_NAMES = ['AUTO_ESP32_S3', 'TANQUE_ESP32'];
 const SERVICE_UUID = 'd18a12f0-a970-47c8-a4bb-4a8e94fb7195';
 const CHAR_UUID = 'd18a12f1-a970-47c8-a4bb-4a8e94fb7195';
 const intervalMs = 70;
@@ -86,7 +86,7 @@ function updateUI() {
   const ok = connected();
   $('led').classList.toggle('connected', ok);
   $('connection-text').textContent = ok ? 'Bluetooth conectado' : (connecting ? 'Conectando...' : 'Sin conectar');
-  $('device-text').textContent = ok ? DEVICE_NAME : (connecting ? 'Buscando el servicio BLE...' : 'Enciende el carro y activa Bluetooth');
+  $('device-text').textContent = ok ? (bleDevice.name || 'Vehículo BLE') : (connecting ? 'Buscando el servicio BLE...' : 'Enciende el vehículo y activa Bluetooth');
   $('connect-button').textContent = ok ? 'Desconectar' : (connecting ? 'Espere...' : 'Conectar');
   $('connect-button').disabled = connecting;
   $('drive-mode').textContent = direction && ok ? ({F:'Avanzando',B:'Retrocediendo',L:'Girando izquierda',R:'Girando derecha'}[direction]) : 'Detenido';
@@ -111,7 +111,7 @@ function onDisconnected() {
   stopPending = false;
   speedPending = false;
   forceMove = false;
-  details('Conexión perdida. El carrito debe detenerse.');
+  details('Conexión perdida. El vehículo debe detenerse.');
   updateUI();
 }
 
@@ -120,7 +120,7 @@ async function connectBluetooth() {
     details('Web Bluetooth no está disponible aquí. Usa Chrome en Android y publica la app con HTTPS.');
     return;
   }
-  connecting = true; details('Selecciona AUTO_ESP32_S3 en la lista.'); updateUI();
+  connecting = true; details('Selecciona AUTO_ESP32_S3 o TANQUE_ESP32 de la lista.'); updateUI();
   try {
     // requestDevice se ejecuta a partir del clic real de usuario.
     const device = await navigator.bluetooth.requestDevice({

@@ -1,5 +1,5 @@
 /* Caché local: interfaz disponible sin datos móviles después de la primera visita HTTPS. */
-const CACHE = 'autito-esp32s3-ble-v1';
+const CACHE = 'autoble-dos-vehiculos-ble-v2';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting()));
