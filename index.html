@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no" />
+  <meta name="theme-color" content="#0a1225" />
+  <meta name="description" content="Mando Bluetooth BLE para un carrito con ESP32-S3 y puente H L298N" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" href="./icon-192.png" />
+  <title>Autito BLE · ESP32-S3</title>
+  <style>
+    :root {color-scheme: dark; --bg:#080e1e; --panel:#111b31; --panel2:#18263f; --stroke:#30415d; --muted:#99a9c2; --white:#f3f7ff; --blue:#56b5ff; --blue2:#2279e8; --green:#56e5ad; --red:#ff6f85; --shadow:0 18px 50px #0007}
+    *{box-sizing:border-box} html,body{min-height:100%;margin:0} body{background:radial-gradient(circle at 15% 0%,#172d56 0%,transparent 35%),var(--bg);color:var(--white);font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;-webkit-tap-highlight-color:transparent} button,input{font:inherit} button{cursor:pointer} button:focus-visible,input:focus-visible{outline:3px solid #79caff;outline-offset:3px}
+    .shell{max-width:500px;margin:0 auto;padding:22px 18px calc(24px + env(safe-area-inset-bottom))}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px}.logo{display:flex;align-items:center;gap:12px}.logo-mark{width:48px;height:48px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(135deg,#2a8fe7,#1d3c73);box-shadow:0 10px 24px #083c7e7c;font-size:26px}.top h1{font-size:21px;letter-spacing:-.55px;margin:0}.top p{color:var(--muted);font-size:12px;margin:2px 0 0}.tag{font-size:11px;background:#1b2e4b;color:#8ac7ff;border:1px solid #2d4c74;border-radius:999px;padding:7px 10px;white-space:nowrap}
+    .card{background:linear-gradient(180deg,#13213a,#10192b);border:1px solid #2c3b56;box-shadow:var(--shadow);border-radius:22px;padding:19px;margin-bottom:16px}
+    .connection{display:flex;align-items:center;gap:12px}.indicator{width:13px;height:13px;background:#8794a8;flex-shrink:0;border-radius:100%;box-shadow:0 0 0 5px #ffffff0b}.indicator.connected{background:var(--green);box-shadow:0 0 0 5px #56e5ad20,0 0 16px #56e5ad88}.info{flex:1;min-width:0}.info strong{display:block;font-size:15px}.info small{display:block;word-break:break-word;color:var(--muted);font-size:12px;margin-top:5px}.connect-btn{min-width:104px;border:0;background:#287ee0;color:white;border-radius:13px;padding:13px 14px;font-weight:700}.connect-btn:disabled{opacity:.5}
+    .control-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.eyebrow{font-size:12px;letter-spacing:1.5px;color:#88befe;text-transform:uppercase;font-weight:750}.control-title{margin:7px 0 0;font-size:21px}.control-desc{margin:7px 0 0;color:var(--muted);font-size:12px;line-height:1.5}.mode{border:1px solid #30415d;background:#1b2a43;color:#c2d5f3;padding:7px 9px;border-radius:999px;font-size:12px}
+    .pad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:repeat(3,85px);gap:13px;max-width:375px;margin:21px auto 6px;touch-action:none;user-select:none;-webkit-user-select:none}.drive{border:1px solid #42639b;border-radius:20px;background:linear-gradient(155deg,#274f86,#172d52);color:#f4f9ff;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;transition:transform .08s,background .08s;box-shadow:inset 0 1px #ffffff2c,0 7px 15px #0003;touch-action:none}.drive .arrow{font-size:32px;line-height:1}.drive .label{font-size:11px;color:#b6d5fb;letter-spacing:.3px}.drive.active{background:linear-gradient(145deg,#418de8,#1e5cba);transform:scale(.96);border-color:#95d2ff}.drive:disabled{opacity:.45}.drive.up{grid-column:2;grid-row:1}.drive.left{grid-column:1;grid-row:2}.drive.right{grid-column:3;grid-row:2}.drive.down{grid-column:2;grid-row:3}.stop{grid-column:2;grid-row:2;border:1px solid #b95069;border-radius:19px;background:linear-gradient(145deg,#9a304e,#621e37);color:#fff;font-weight:900;letter-spacing:1px}.stop:active{transform:scale(.97);background:#c73a5b}.caption{text-align:center;color:#8e9fb9;font-size:11px;line-height:1.5;margin-top:16px}
+    .velocity-header{display:flex;align-items:center;justify-content:space-between}.velocity-header h2{margin:0;font-size:16px}.percent{background:#253b60;color:#a6d2ff;border:1px solid #35547e;border-radius:12px;padding:7px 10px;font-size:17px;font-weight:800;min-width:68px;text-align:center}.slider{width:100%;margin:25px 0 7px;accent-color:#5cb5ff;cursor:pointer}.range-labels{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+    .note{display:flex;gap:10px;padding:13px 15px;border-radius:16px;border:1px solid #6f623a;background:#3c311f72;color:#e7cda1;font-size:12px;line-height:1.55}.note span:first-child{font-size:18px}.footer{text-align:center;color:#74869f;font-size:11px;line-height:1.6;margin-top:14px} .footer strong{color:#bacfe8} .statusdetail{min-height:18px;margin-top:10px;text-align:center;color:#9dc7fb;font-size:12px}
+    @media(max-width:370px){.shell{padding:16px 12px 24px}.card{padding:15px}.pad{grid-template-rows:repeat(3,77px);gap:9px}.top h1{font-size:18px}}
+    @media(min-height:850px){.pad{grid-template-rows:repeat(3,95px);gap:15px}}
+    @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+  </style>
+</head>
+<body>
+<main class="shell">
+  <header class="top"><div class="logo"><div class="logo-mark" aria-hidden="true">🚙</div><div><h1>Autito BLE</h1><p>Control remoto · ESP32-S3</p></div></div><div class="tag">L298N + BLE</div></header>
+
+  <section class="card" aria-label="Conexión Bluetooth">
+    <div class="connection"><span class="indicator" id="led"></span><div class="info"><strong id="connection-text">Sin conectar</strong><small id="device-text">Enciende el carro y activa Bluetooth</small></div><button type="button" class="connect-btn" id="connect-button">Conectar</button></div>
+  </section>
+
+  <section class="card" aria-label="Control de dirección">
+    <div class="control-head"><div><span class="eyebrow">CONTROLES</span><h2 class="control-title">Conduce tu carrito</h2></div><span class="mode" id="drive-mode">Detenido</span></div>
+    <p class="control-desc">Mantén presionada una flecha para moverte. Suéltala para detenerte.</p>
+    <div class="pad" id="dpad">
+      <button type="button" class="drive up" data-command="F" aria-label="Avanzar"><span class="arrow">↑</span><span class="label">AVANZAR</span></button>
+      <button type="button" class="drive left" data-command="L" aria-label="Girar a la izquierda"><span class="arrow">←</span><span class="label">IZQUIERDA</span></button>
+      <button type="button" class="stop" id="stop-button" aria-label="Detener motores">STOP</button>
+      <button type="button" class="drive right" data-command="R" aria-label="Girar a la derecha"><span class="arrow">→</span><span class="label">DERECHA</span></button>
+      <button type="button" class="drive down" data-command="B" aria-label="Retroceder"><span class="arrow">↓</span><span class="label">RETROCEDER</span></button>
+    </div>
+    <p class="caption">Seguridad: si deja de llegar una orden durante 800 ms, el ESP32 detiene los motores.</p>
+  </section>
+
+  <section class="card" aria-label="Ajuste de velocidad">
+    <div class="velocity-header"><h2>Velocidad</h2><output id="speed-value" class="percent" for="speed">71%</output></div>
+    <input class="slider" type="range" id="speed" min="0" max="255" value="180" step="1" aria-label="Velocidad en PWM" />
+    <div class="range-labels"><span>0% · Detenido</span><span>100% · Máxima</span></div>
+    <div class="statusdetail" id="details" role="status" aria-live="polite"></div>
+  </section>
+
+  <div class="note"><span aria-hidden="true">⚠</span><span>Prueba primero con las ruedas levantadas del suelo. Si el control se desconecta, el carro se detiene automáticamente.</span></div>
+  <div class="footer">Sin Wi-Fi para conducir · <strong>Bluetooth Low Energy</strong><br/>Para Android Chrome, desde una página segura (HTTPS).</div>
+</main>
+<script>
+'use strict';
+const DEVICE_NAME = 'AUTO_ESP32_S3';
+const SERVICE_UUID = 'd18a12f0-a970-47c8-a4bb-4a8e94fb7195';
+const CHAR_UUID = 'd18a12f1-a970-47c8-a4bb-4a8e94fb7195';
+const intervalMs = 70;
+const repeatMs = 230;
+
+const $ = id => document.getElementById(id);
+const driveButtons = [...document.querySelectorAll('.drive')];
+const encoder = new TextEncoder();
+let bleDevice = null;
+let characteristic = null;
+let connecting = false;
+let writing = false;
+let direction = '';
+let currentPointer = null;
+let heldButton = null;
+let lastMoveSent = 0;
+let forceMove = false;
+let stopPending = false;
+let speedPending = false;
+let speedValue = Number($('speed').value);
+
+function connected() { return !!(bleDevice && bleDevice.gatt && bleDevice.gatt.connected && characteristic); }
+function details(text) { $('details').textContent = text || ''; }
+function updateUI() {
+  const ok = connected();
+  $('led').classList.toggle('connected', ok);
+  $('connection-text').textContent = ok ? 'Bluetooth conectado' : (connecting ? 'Conectando...' : 'Sin conectar');
+  $('device-text').textContent = ok ? DEVICE_NAME : (connecting ? 'Buscando el servicio BLE...' : 'Enciende el carro y activa Bluetooth');
+  $('connect-button').textContent = ok ? 'Desconectar' : (connecting ? 'Espere...' : 'Conectar');
+  $('connect-button').disabled = connecting;
+  $('drive-mode').textContent = direction && ok ? ({F:'Avanzando',B:'Retrocediendo',L:'Girando izquierda',R:'Girando derecha'}[direction]) : 'Detenido';
+  driveButtons.forEach(b => { b.disabled = !ok; b.classList.toggle('active', direction === b.dataset.command && ok); });
+  $('stop-button').disabled = !ok;
+}
+
+function stopMovement() {
+  direction = '';
+  currentPointer = null;
+  heldButton = null;
+  forceMove = false;
+  if (connected()) stopPending = true;
+  updateUI();
+}
+function onDisconnected() {
+  characteristic = null;
+  connecting = false;
+  direction = '';
+  currentPointer = null;
+  heldButton = null;
+  stopPending = false;
+  speedPending = false;
+  forceMove = false;
+  details('Conexión perdida. El carrito debe detenerse.');
+  updateUI();
+}
+
+async function connectBluetooth() {
+  if (!navigator.bluetooth) {
+    details('Web Bluetooth no está disponible aquí. Usa Chrome en Android y publica la app con HTTPS.');
+    return;
+  }
+  connecting = true; details('Selecciona AUTO_ESP32_S3 en la lista.'); updateUI();
+  try {
+    // requestDevice se ejecuta a partir del clic real de usuario.
+    const device = await navigator.bluetooth.requestDevice({
+      filters: [{services: [SERVICE_UUID]}]
+    });
+    bleDevice = device;
+    device.addEventListener('gattserverdisconnected', onDisconnected);
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService(SERVICE_UUID);
+    characteristic = await service.getCharacteristic(CHAR_UUID);
+    stopPending = true;
+    speedPending = true;
+    direction = '';
+    lastMoveSent = 0;
+    details('Listo. Mantén presionada una flecha.');
+  } catch (error) {
+    details('No fue posible conectar: ' + (error.message || String(error)));
+    if (bleDevice && bleDevice.gatt && bleDevice.gatt.connected) bleDevice.gatt.disconnect();
+    characteristic = null;
+  } finally {
+    connecting = false;
+    updateUI();
+  }
+}
+
+async function disconnectBluetooth() {
+  stopMovement();
+  // Intentar enviar S de manera directa, sin prometer que llegará.
+  if (connected() && !writing) {
+    try { await writeRaw('S'); } catch (_) { /* el ESP32 tiene watchdog */ }
+  }
+  if (bleDevice && bleDevice.gatt && bleDevice.gatt.connected) bleDevice.gatt.disconnect();
+  onDisconnected();
+}
+
+async function writeRaw(command) {
+  const target = characteristic;
+  if (!target || !connected()) return;
+  const data = encoder.encode(command);
+  if (typeof target.writeValueWithResponse === 'function') {
+    await target.writeValueWithResponse(data);
+  } else {
+    await target.writeValue(data);
+  }
+}
+
+async function pump() {
+  if (!connected() || writing) return;
+  let packet = '';
+  if (stopPending) {
+    packet = 'S';
+    stopPending = false;
+  } else if (speedPending) {
+    packet = 'V' + speedValue;
+    speedPending = false;
+  } else if (direction && (forceMove || Date.now() - lastMoveSent >= repeatMs)) {
+    packet = direction;
+    forceMove = false;
+    lastMoveSent = Date.now();
+  }
+  if (!packet) return;
+  writing = true;
+  try {
+    await writeRaw(packet);
+  } catch (error) {
+    details('Error Bluetooth: ' + (error.message || String(error)));
+    stopMovement();
+    if (bleDevice && bleDevice.gatt && bleDevice.gatt.connected) bleDevice.gatt.disconnect();
+  } finally { writing = false; }
+}
+
+function pressMovement(button, event) {
+  if (!connected() || currentPointer !== null) return;
+  event.preventDefault();
+  currentPointer = event.pointerId;
+  heldButton = button;
+  direction = button.dataset.command;
+  forceMove = true;
+  stopPending = false;
+  try { button.setPointerCapture(event.pointerId); } catch (_) {}
+  updateUI();
+  void pump();
+}
+function releaseMovement(event) {
+  if (currentPointer === null || event.pointerId !== currentPointer) return;
+  stopMovement();
+  void pump();
+}
+
+for (const button of driveButtons) {
+  button.addEventListener('pointerdown', event => pressMovement(button, event));
+  button.addEventListener('pointerup', releaseMovement);
+  button.addEventListener('pointercancel', releaseMovement);
+  button.addEventListener('lostpointercapture', releaseMovement);
+  button.addEventListener('contextmenu', event => event.preventDefault());
+}
+$('stop-button').addEventListener('click', () => { stopMovement(); void pump(); });
+$('connect-button').addEventListener('click', () => {
+  if (connected()) void disconnectBluetooth();
+  else if (!connecting) void connectBluetooth();
+});
+$('speed').addEventListener('input', event => {
+  speedValue = Number(event.target.value);
+  $('speed-value').textContent = Math.round(speedValue * 100 / 255) + '%';
+  speedPending = true;
+  void pump();
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden) {stopMovement(); void pump();} });
+window.addEventListener('blur', () => {stopMovement(); void pump();});
+window.addEventListener('pagehide', () => {stopMovement(); void pump();});
+window.addEventListener('keydown', event => {
+  if (!connected() || event.repeat) return;
+  const codes = {ArrowUp:'F',ArrowDown:'B',ArrowLeft:'L',ArrowRight:'R'};
+  if (codes[event.key]) { event.preventDefault(); direction=codes[event.key]; forceMove=true; stopPending=false; updateUI(); void pump(); }
+  if (event.key === ' ' || event.key === 'Escape') { event.preventDefault();stopMovement();void pump(); }
+});
+window.addEventListener('keyup', event => {
+  if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key)) {event.preventDefault();stopMovement();void pump();}
+});
+setInterval(() => { void pump(); }, intervalMs);
+updateUI();
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>
